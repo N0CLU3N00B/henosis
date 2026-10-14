@@ -17,7 +17,7 @@ of [ARCHITECTURE.md](ARCHITECTURE.md).
 - **An audited core:** registration, certificate admission, nullifier v2, and voting v2 with child scopes and
   admission rules. The core is frozen at M4.
 - **Experimental satellites** next to the core, not frozen. The first one is the **Epoch badge register**:
-  - a record per epoch, kept by a contract, of who took part;
+  - a record per epoch, kept by a contract, of addresses whose holders chose to record their membership;
   - obtained through a zero-knowledge proof against a snapshot;
   - no token standard and nothing transferable;
   - no rule may read it as a threshold.
