@@ -27,3 +27,4 @@ of [ARCHITECTURE.md](ARCHITECTURE.md).
 - **Encrypted tally (FHE)** once capacity allows; Release 1 uses a commit-reveal secret ballot.
 - **Karma (M2 of the architecture), lottery (M3), constitution (M6), AI advisory (M7):** design only today; they
   follow after Release 1.
+- Extension ERCs (proof-verifier interface, vote formats, pseudonym attestations) after the core ERC is submitted.
