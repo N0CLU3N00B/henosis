@@ -1,0 +1,179 @@
+# Henosis architecture (overview)
+
+A shortened overview of the architecture specification. It describes the design and the current approach of each
+module.
+
+## 1. Layer model
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Clients: phone / web / offline node                           │
+│  SDK · wallet (account abstraction) · local proof generation   │
+└───────────────┬──────────────────────────────────────────────┘
+                │
+┌───────────────▼──────────────────────────────────────────────┐
+│  M7  AI advisory layer (off-chain, plural, no keys)            │
+└───────────────┬──────────────────────────────────────────────┘
+                │ hashes of the advisory documents
+┌───────────────▼──────────────────────────────────────────────┐
+│  M6  Constitution (fundamental rights, amendment rules, brake) │
+├──────────────────────────────────────────────────────────────┤
+│  M5  Scope registry (local → regional → global)                │
+├──────────────┬──────────────┬──────────────┬─────────────────┤
+│  M1 Identity │  M2 Karma    │  M3 Lottery  │  M4 Voting      │
+│  (PoP, ZK)   │  (soulbound) │  (beacon)    │  (anonymous)    │
+└──────────────┴──────────────┴──────────────┴─────────────────┘
+                │
+┌───────────────▼──────────────────────────────────────────────┐
+│  M8  Security and operations (keys, audits, post-quantum)      │
+├──────────────────────────────────────────────────────────────┤
+│  Shibarium (Chain 109) · Puppynet testnet (Chain 157)          │
+└──────────────────────────────────────────────────────────────┘
+```
+
+## 2. Non-goals
+
+- No own token, no speculation, no tokenomics.
+- No coupling of governance to staking or to Shibarium's validator consensus.
+- No central identity database.
+- No bridges as a required component.
+- No burn logic, no binding to SHIB, no fee hooks in the protocol. Shibarium benefits through use and as a showcase.
+  Revenue, if there ever is any, comes only from a separate legal entity offering services, never from the protocol.
+
+## 3. Modules
+
+### M1 – Identity (proof of personhood)
+
+**Goal:** prove "a unique human, member of scope X" without revealing who.
+
+- **Electronic identity documents (built; phone app in development).** The person's phone reads the chip of a
+  passport or ID card over NFC and proves in zero knowledge, on the phone:
+  - the document was signed by a document signer certificate (DSC) of an issuing state;
+  - that certificate is in a public tree of known certificates;
+  - the person holds a secret bound to the document.
+
+  On chain there is only the proof, a document nullifier (one registration per document and registry; it differs
+  between registries, so registrations cannot be linked across chains) and an identity commitment. No name, number or date of birth leaves the phone.
+- **Certificate trees.** The country signing certificates (CSCAs) and the DSCs live in public Merkle trees.
+  - New roots are proposed with a deposit, wait out a time lock and can be stopped by an objector during that time.
+  - New DSCs can also be admitted permissionlessly by a zero-knowledge proof that a known CSCA signed them, again
+    with a time lock and an objection window.
+- **Chip authentication.** Documents whose chip can sign a challenge can upgrade an identity to a higher assurance
+  level, which shows that the chip itself was present and not a copy of its data.
+- **Further admission paths (designed):** local vouching by verified members, and presence events with rotating,
+  randomly selected verifiers for people without an electronic document.
+- **Recovery.** Rebinding an identity to a new secret by the chip or by presence, with a waiting period and an
+  objection, and a successor path for a new document.
+
+### M2 – Karma (soulbound)
+
+**Goal:** record mutual aid and community service, non-transferable.
+
+- Granted only on mutual confirmation (the helper reports, the recipient confirms) or by scope services.
+- Caps per pair of persons and epoch and per person and epoch; karma decays over time.
+- Reciprocity loops are detected off-chain and reviewed by randomly selected reviewers.
+- Externally only threshold proofs ("at least X karma"), no individual history.
+- Karma converts into lottery tickets or exempts from a duty. It cannot be transferred, sold or delegated.
+
+### M3 – Lottery
+
+**Goal:** allocations that cannot be decided fairly otherwise: time slots, offices between equally qualified people,
+scarce goods.
+
+- One base entry per person (by nullifier), extra tickets from karma.
+- Public, verifiable randomness (a beacon such as drand, or a VRF), fixed before the participation deadline.
+- Sortition fills offices (reviewers, the emergency brake body of M6) from volunteers for a fixed term.
+
+### M4 – Voting
+
+**Goal:** secret, verifiable, resistant to vote buying and coercion.
+
+- **Stage 1 (built):** a non-binding shadow vote in Scope 0.
+  - Members join an epoch group with their identity and vote anonymously with a group membership proof.
+  - One nullifier per proposal stops double voting; a member may change their vote until the window closes.
+  - Two variants:
+    - **cleartext tally**, for chains without fully homomorphic encryption;
+    - **FHE tally** with Zama, where only the final sums are ever decrypted, for chains where Zama runs.
+- **Voting v2 (Release 1, in work):** a commit-reveal secret ballot, abstention, an enforced quorum, rules changeable
+  by vote, pluggable vote formats and a private join. The FHE tally follows when capacity allows.
+- **Limit of stage 1, stated plainly:** a revote stays secret in content but is publicly visible as a revote.
+  Whoever was shown a voter's vote can see whether that voter later changed it.
+- **Target design (later stage):** the MACI principle. Every person can change their voting key without anyone
+  noticing, so a bought or coerced vote cannot be proven. The coordinator role is spread over several independent
+  operators, and the tally is proven in zero knowledge.
+- **Delegation (planned):** topic-specific and revocable at any time, with a cap per delegate; a direct vote always
+  overrides the delegation.
+
+### M5 – Scope registry (federation)
+
+**Goal:** represent subsidiarity technically.
+
+- A scope has a parent (local → regional → global), an identity group, parameters (quorums, deadlines, caps) and a
+  list of competences.
+- A scope decides only within its competences.
+- Competences move only upwards, ceded from below, can be reclaimed from below, and can never be taken from above.
+- **Interfaces instead of rules:**
+  - Henosis supplies interfaces and building blocks; each community sets its own rules, thresholds and procedures.
+    Admission rules (holding an asset, an attestation, vouches, presence) plug in behind fixed interfaces
+    ([INTERFACES.md](INTERFACES.md)). A rule admits or refuses; it never adds weight.
+  - Four guarantees hold for every scope and cannot be configured away:
+    - **uniqueness per scope:** one person, one membership, one vote per proposal;
+    - **anonymity of the vote;**
+    - **unilateral exit:** leaving needs no deposit, lock or approval;
+    - **decisions only about oneself:** a scope acts only in its own matters, never in another scope.
+  - Creating child scopes and dissolving a scope are decided, not built yet.
+- **Expansion:**
+  - first, all scopes as contracts on Shibarium;
+  - later, large scopes on their own chains with a shared protocol, reading each other's results by state proofs.
+
+### M6 – Constitution
+
+- **Fundamental rights,** immutable in the protocol: participation, exit, privacy, equality of the vote.
+- **Amendments** to other rules need a supermajority across several scopes and a time lock.
+- **Emergency brake:**
+  - a randomly selected, time-limited body can pause single modules;
+  - it can never move funds or change rules;
+  - every pause expires by itself and needs confirmation by a vote.
+- **No admin keys.** Until M6 exists, an interim objector can only object (veto during a time lock, a time-limited
+  pause). The role is meant to pass to M6, acting through signatures collected off-chain.
+
+### M7 – AI advisory layer
+
+- At least three independent models from different operators, at least one with open weights.
+- Each side of a decision gets its own argument (the "voting booklet" principle); facts with sources are kept
+  apart from evaluation.
+- Prompts, model versions and outputs are hashed and referenced on chain.
+- No keys, no execution rights, no payment access.
+
+### M8 – Security and operations
+
+- Threshold signatures or MPC for every operator role.
+- External audits and formal verification of all contracts before mainnet.
+- Upgrades only through the M6 procedure with a time lock.
+- Crypto-agility: signature and proof systems are swappable, so post-quantum schemes can be adopted when standards
+  and audited implementations exist.
+- Gas abstraction: users need no BONE; transactions run through account abstraction, funded from a community pool.
+- Offline-first clients: proofs are generated on the device, submitted through a relayer or a local node.
+
+## 4. Example: a vote in a local scope
+
+1. A member creates a motion; its hash goes on chain.
+2. M7 prepares arguments for and against from several models; hashes on chain, content on distributed storage.
+3. Members vote with a membership proof (M1) and their encrypted or anonymous vote (M4).
+4. Votes can be changed until the deadline.
+5. The tally is computed and published with its proof.
+6. The result takes effect after a time lock, unless the emergency brake (M6) is invoked.
+
+## 5. Threat model
+
+| Threat | Countermeasure |
+|---|---|
+| Duplicate identities (Sybil) | M1: one registration per document, nullifiers, vouching with liability |
+| Karma farming by collusion | M2: pair caps, decay, graph analysis, randomly selected reviewers |
+| Vote buying and coercion | M4: revoting (stage 1), unprovable key changes (target design) |
+| Flash-loan takeover | Excluded by design: no token-weighted governance |
+| Coordinator compromise | Several independent operators; the tally is proven |
+| Manipulation through AI preparation | M7: plurality, partisan preparation, hashing |
+| Admin key abuse | No admin keys; upgrades only through the constitution |
+| Overreach by a higher level | M5: competences are only ceded from below |
+| Quantum computers | M8: crypto-agility, post-quantum roadmap |
