@@ -69,8 +69,8 @@ Further fixed rules:
 - **Nothing is deployed on Shibarium mainnet (Chain 109)**, and nothing on the Puppynet testnet (Chain 157) either:
   the Puppynet deployment is prepared but has never been broadcast. The only deployment so far is the demo on Celo
   Sepolia. Mainnet only after an external audit.
-- **First use case:** the Shiba Network State as Scope 0, a person-based shadow vote next to the existing
-  token-weighted Shiba Inu DAO, non-binding until the community chooses otherwise.
+- First use case: a non-binding, person-based shadow vote for the Shib community (Scope 0), until the community
+  chooses otherwise.
 
 ## License
 
