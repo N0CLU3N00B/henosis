@@ -101,3 +101,12 @@ interface IAdmissionRule is IERC165 {
 | `IPersonhoodVerifier` | `0x461ae3b6` |
 | `INullifierRegistry` | `0xcafeb4e0` |
 | `IAdmissionRule` | `0x4d42cf5d` |
+
+Each identifier is the XOR of the interface's own two function selectors. The `uint8` in `check` is the `Phase` enum
+as encoded in the ABI.
+
+| Interface | Selectors (`cast sig`) | XOR |
+|---|---|---|
+| `IPersonhoodVerifier` | `verifyPersonhood(uint256,uint256,uint256,uint256,bytes)` = `0x12724690`, `personhoodScheme()` = `0x5468a526` | `0x461ae3b6` |
+| `INullifierRegistry` | `consume(bytes32,uint256)` = `0x98017489`, `isConsumed(address,bytes32,uint256)` = `0x52ffc069` | `0xcafeb4e0` |
+| `IAdmissionRule` | `check(uint256,uint256,uint8,bytes32,bytes)` = `0x57934ba2`, `describe()` = `0x1ad184ff` | `0x4d42cf5d` |

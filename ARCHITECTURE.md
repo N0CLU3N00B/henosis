@@ -89,15 +89,24 @@ scarce goods.
 **Goal:** secret, verifiable, resistant to vote buying and coercion.
 
 - **Stage 1 (built):** a non-binding shadow vote in Scope 0.
-  - Members join an epoch group with their identity and vote anonymously with a group membership proof.
-  - One nullifier per proposal stops double voting; a member may change their vote until the window closes.
-  - Two variants:
-    - **cleartext tally**, for chains without fully homomorphic encryption;
-    - **FHE tally** with Zama, where only the final sums are ever decrypted, for chains where Zama runs.
+  - Members join an epoch group with their identity and vote with a group membership proof. The proof shows that the
+    voter is a member, not which one.
+  - One vote nullifier per member and proposal stops double voting; a member may change their vote until the
+    window closes.
+  - **What is public, in both variants:**
+    - who joined the epoch;
+    - that a vote nullifier voted, and how often (each revote is visible as such);
+    - the result.
+  - **What differs between the two variants:**
+    - **cleartext tally**, for chains without fully homomorphic encryption: each vote's content is public, tied to
+      its vote nullifier, and the running tally can be read while voting is open. Anonymous, but not a secret
+      ballot.
+    - **FHE tally** with Zama, for chains where Zama runs: each vote and the running tally stay encrypted; only the
+      final sums are decrypted after the window closes.
+  - Whoever was shown a voter's vote nullifier can see whether that voter later voted again. With the cleartext tally
+    they can also see the new choice.
 - **Voting v2 (Release 1, in work):** a commit-reveal secret ballot, abstention, an enforced quorum, rules changeable
   by vote, pluggable vote formats and a private join. The FHE tally follows when capacity allows.
-- **Limit of stage 1, stated plainly:** a revote stays secret in content but is publicly visible as a revote.
-  Whoever was shown a voter's vote can see whether that voter later changed it.
 - **Target design (later stage):** the MACI principle. Every person can change their voting key without anyone
   noticing, so a bought or coerced vote cannot be proven. The coordinator role is spread over several independent
   operators, and the tally is proven in zero knowledge.

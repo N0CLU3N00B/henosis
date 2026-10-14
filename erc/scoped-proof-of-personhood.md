@@ -138,6 +138,9 @@ interface IAdmissionRule is IERC165 {
 | `INullifierRegistry` | `0xcafeb4e0` |
 | `IAdmissionRule` | `0x4d42cf5d` |
 
+Each identifier is the XOR of the interface's own function selectors (`Phase` is encoded as `uint8`):
+`0x12724690 ^ 0x5468a526`, `0x98017489 ^ 0x52ffc069` and `0x57934ba2 ^ 0x1ad184ff`.
+
 Implementations MUST return true from `supportsInterface` for their interface's identifier and for ERC-165's.
 
 ## Rationale

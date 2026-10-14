@@ -66,7 +66,9 @@ Further fixed rules:
     ceremony is still needed;
   - no external audit yet;
   - no relayer and no released phone app.
-- **Nothing is deployed on Shibarium.** Mainnet only after an external audit.
+- **Nothing is deployed on Shibarium mainnet (Chain 109)**, and nothing on the Puppynet testnet (Chain 157) either:
+  the Puppynet deployment is prepared but has never been broadcast. The only deployment so far is the demo on Celo
+  Sepolia. Mainnet only after an external audit.
 - **First use case:** the Shiba Network State as Scope 0, a person-based shadow vote next to the existing
   token-weighted Shiba Inu DAO, non-binding until the community chooses otherwise.
 
