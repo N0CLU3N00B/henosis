@@ -161,7 +161,8 @@ scarce goods.
 - Upgrades only through the M6 procedure with a time lock.
 - Crypto-agility: signature and proof systems are swappable, so post-quantum schemes can be adopted when standards
   and audited implementations exist.
-- Gas abstraction: users need no BONE; transactions run through account abstraction, funded from a community pool.
+- Gas abstraction: users need no BONE; transactions are submitted by a relayer (with a direct-send fallback), funded
+  from a community pool. Account abstraction is revisited once an ERC-4337 EntryPoint exists on Shibarium.
 - Offline-first clients: proofs are generated on the device, submitted through a relayer or a local node.
 
 ## 4. Example: a vote in a local scope

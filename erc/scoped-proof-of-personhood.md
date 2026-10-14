@@ -2,14 +2,17 @@
 eip: TBD
 title: Scoped Proof of Personhood
 description: Interfaces to verify one-person membership per scope, record scoped nullifiers, and plug in admission rules
-author: TBD (the project owner decides authorship before any submission)
-discussions-to: TBD
-status: Draft (not submitted)
+author: TBD (author handles are decided before submission)
+discussions-to: TBD (an Ethereum Magicians thread, opened at submission)
+status: Draft
 type: Standards Track
 category: ERC
 created: 2026-10-13
 requires: 165
 ---
+
+> **Not submitted.** This draft is published for comment. The reference implementation and its tests will be placed
+> under `assets/` when it is submitted.
 
 ## Abstract
 
@@ -56,11 +59,22 @@ RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as de
 
 - **Personhood set:** a set of identity commitments, at most one per person, committed to by a root (`setRoot`). How
   persons enter it is outside this standard.
+  - The set's own **entry scheme** (for example the document nullifier that keeps one entry per person) is a property
+    of the set, not of the verifier.
+  - `personhoodScheme()` names only the derivation of the action nullifier.
+  - A set SHOULD name its entry scheme in its own metadata; ERC-8084 is a place for such metadata.
 - **Scope:** a field element naming the domain in which a person may act once. Examples: one community, one proposal,
   one airdrop.
+  - *Terminology note:* a consumer usually has its own local scope identifier (for example a `uint64` scope id).
+  - It maps that identifier to the field element as described under "Scope collisions" in the Security
+    Considerations.
+  - "Scope" in this standard always means the field element.
 - **Nullifier:** a deterministic function of the person's identity secret and the scope. It is unique per (person,
-  scope) and unlinkable across scopes without the secret.
-- **Message:** a field element the proof is bound to (an action hash, a vote option).
+  scope) and unlinkable across scopes without the secret. A set or consumer that stores nullifiers as `bytes32`
+  converts them to `uint256` by zero extension, never by reduction.
+- **Message:** a field element the proof is bound to (an action hash, a vote option). A consumer that derives the
+  message from bytes SHOULD use `uint256(keccak256(bytes)) >> 8`, Semaphore's convention, so that implementations
+  agree.
 - **Context:** a `bytes32` chosen by a consumer of nullifiers (a registration, an epoch, a proposal).
 - **Pseudonym:** the person's nullifier in a scope, used by admission rules as the person's identifier in that scope.
 
@@ -81,7 +95,8 @@ interface IPersonhoodVerifier is IERC165 {
   1. the prover knows the secret of an identity in the set committed to by `setRoot`;
   2. `nullifier` is the implementation's nullifier of that identity for `scope`;
   3. the proof is bound to `message`.
-- It MAY revert with `MalformedProof` or `ValueOutOfField` instead of returning false.
+- It MAY revert with `MalformedProof` or `ValueOutOfField` instead of returning false. Consumers MUST treat a revert
+  as "not valid", and MUST NOT retry with reduced values.
 - It MUST NOT reduce out-of-field values silently.
 - It MUST NOT keep state, so the same proof verifies the same way every time. Use-once is the caller's
   (`INullifierRegistry`), and so is the choice of acceptable `setRoot` values.
@@ -121,6 +136,9 @@ interface IAdmissionRule is IERC165 {
 ```
 
 - `check` MUST revert with `NotAdmitted` when the person is not admitted. It MUST NOT change state.
+- `context` is 0 at `Phase.Join`. At `Phase.Epoch` and `Phase.Action` the consumer defines it (for example a hash of
+  the epoch or of the action), and documents it, either in the rule's `describe` parameters or in its own
+  documentation.
 - When one piece of evidence must not admit two persons in the same context (one NFT, one wallet), the rule returns a
   non-zero `ruleNullifier` derived from that evidence and `context`, and the caller MUST record it as used. Otherwise
   the rule returns 0.
@@ -186,6 +204,17 @@ Implementations MUST return true from `supportsInterface` for their interface's 
     PLUME nullifier for (address, context) as the `ruleNullifier`, without linking the wallet to the person.
   - It does not replace personhood: one person can hold many addresses.
   - PLUME notes that a quantum adversary who breaks ECDSA could recompute nullifiers; the same applies to such a rule.
+- **Other standards that touch this one:**
+  - **ERC-5732** (commit interface): commit-reveal consumers may reuse its commitment convention; its event, indexed
+    by address, does not fit anonymous consumers.
+  - **ERC-8143 and ERC-7734**: personhood or identity as a record per address, the opposite binding to this
+    standard's.
+  - **ERC-1922/1923, ERC-7913 and ERC-8084** (generic proof verifiers, signature verifiers and proof metadata): the
+    verifier behind `IPersonhoodVerifier` may follow them; this standard fixes only the personhood statement.
+  - **ERC-5564/6538** (stealth addresses): for consumers that pay out or issue something to an address.
+  - **ERC-7574 and the soulbound token standards** (ERC-5192, ERC-5484, ERC-4973): out of scope; consumers may use
+    them for non-transferable badges.
+  - **ERC-4824**: metadata of a consuming community.
 - **Semaphore (v4):**
   - groups with an admin, `addMember`, and `validateProof(groupId, proof)`, where the proof carries `merkleTreeRoot`,
     `nullifier`, `message` and `scope`.
@@ -198,7 +227,9 @@ Implementations MUST return true from `supportsInterface` for their interface's 
 
 ## Backwards Compatibility
 
-New interfaces only. Existing personhood and voting contracts can expose them through adapters without redeployment.
+New interfaces only. An existing verifier and existing admission conditions can be exposed through adapters without
+redeployment. A consumer's internal nullifier records cannot be turned into a shared `INullifierRegistry` that way;
+a registry has to be deployed.
 
 ## Reference Implementation
 
@@ -212,6 +243,10 @@ versioned to allow revoting. Admission rules (`IAdmissionRule`) are planned ther
 - **The set decides Sybil resistance.**
   - This standard proves membership in a set, not that the set has one entry per person. A consumer accepts only
     `setRoot` values from a source it trusts, and checks them against that source's root history.
+  - A contract that publishes a personhood set SHOULD expose `isKnownSetRoot(uint256 root) returns (bool)`, so
+    consumers can check a root without reading the source's internals.
+  - This optional view is not a fourth interface. It does not claim compatibility with ERC-7812, whose root query
+    answers for its own statement tree.
 - **Scope collisions across chains and contracts.**
   - A nullifier is unique per scope. Two applications that use the same scope value link a person's actions across
     them, and can block each other.
@@ -231,6 +266,11 @@ versioned to allow revoting. Admission rules (`IAdmissionRule`) are planned ther
 - **Deterministic nullifiers after a key compromise.**
   - Whoever learns an identity secret can compute all of that person's nullifiers, past and future, and link them.
   - The same holds for PLUME-style nullifiers under a quantum adversary.
+- **No sender binding.** Consumers SHOULD keep their action entry points free of `msg.sender` binding.
+  - Then relayers, account abstraction and fresh addresses all work.
+  - A person's actions are not linked through a submitting account.
+  - This includes recovery and refund paths: a deposit refund SHOULD be claimable by a proof of the new secret, with
+    the payout address chosen at claim time, not recorded at request time.
 - **Weight.** Treating a rule's evidence (a balance) as weight breaks the purpose of this standard. Rules MUST NOT
   expose a weight, and consumers MUST NOT derive one from them.
 

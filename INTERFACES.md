@@ -16,6 +16,10 @@ words; the signatures are listed for reference. All three support ERC-165.
 - **Message:** the value a proof is bound to, for example an action hash or a vote option.
 - **Context:** a value chosen by whoever consumes nullifiers: a registration, an epoch, a proposal.
 - **Pseudonym:** a person's nullifier in a scope, used as their identifier there.
+- **Entry scheme of the set:** how the set keeps one entry per person (for Henosis, the registry's document nullifier
+  `HENOSIS-N-v2`). It is a property of the set; `personhoodScheme()` names only the action nullifier.
+- A consumer's local scope identifier (for example a `uint64` scope id) maps to the scope field element by hashing it
+  with the chain id and the consumer's address.
 
 ## 1. IPersonhoodVerifier
 
@@ -31,6 +35,10 @@ one scope, bound to one message.
 - The verifier keeps no state; the same proof always verifies the same way.
 - Making sure a nullifier is used only once is the caller's job (see `INullifierRegistry`). So is the choice of
   which `setRoot` values are acceptable.
+- A contract that publishes a set should offer the optional view `isKnownSetRoot(uint256) returns (bool)`, so a
+  consumer can check a root directly. This is a recommendation, not a fourth interface.
+- A revert counts as "not valid"; a consumer never retries with reduced values.
+- A message derived from bytes uses `uint256(keccak256(bytes)) >> 8`.
 - Values outside the proof system's field are refused, never silently reduced.
 - The proof is opaque bytes of any length, so a post-quantum, hash-based verifier can implement the same interface.
 - `personhoodScheme` names the proof system and the nullifier derivation, so clients can produce matching proofs.
@@ -55,6 +63,7 @@ interface IPersonhoodVerifier is IERC165 {
   in its own namespace and can never mark or unmark another consumer's nullifiers.
 - Consuming a nullifier twice in the same context fails.
 - Entries are never removed.
+- A nullifier kept as `bytes32` becomes a `uint256` by zero extension, never by reduction.
 - A consumer that lets a person change an earlier action, such as a revote, does not consume per change. It consumes
   once, or keeps its own versioning.
 
@@ -76,6 +85,10 @@ an asset, an attestation, vouches, a presence record, or a combination. The scop
 - A rule admits or refuses. It never returns or implies a weight.
 - It keeps no state, so one deployment can serve many scopes.
 - **When it is checked** is chosen by the scope: once at joining, at every epoch, or with every action.
+  - The context is 0 at joining.
+  - At the epoch or action check, the consumer defines and documents it.
+- **No sender binding:** consumers should not tie actions, recoveries or refunds to `msg.sender`, so relayers and
+  fresh addresses work and actions are not linked through the submitting account.
 - **Evidence that must admit only one person:** when one piece of evidence (one NFT, one wallet) must not admit two
   persons in the same context, the rule returns a rule nullifier derived from that evidence. The caller records it.
 - **Checks with every action:** these must use zero-knowledge evidence if actions are meant to stay anonymous.
