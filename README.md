@@ -88,6 +88,9 @@ Further fixed rules:
   - the relayer is not operated publicly and the phone app is not released.
 - **Nothing is deployed on Shibarium mainnet (Chain 109)**, and nothing on the Puppynet testnet (Chain 157). The
   only deployment so far is the demo on Celo Sepolia. Mainnet only after an external audit.
+- For people without an electronic document, verification in person (presence events with rotating, randomly
+  selected verifiers) and local vouching are designed; the contracts already reserve a separate identity tree for it.
+  They come after Release 1 ([ARCHITECTURE.md, M1](ARCHITECTURE.md#m1--identity-proof-of-personhood)).
 - First use case: a non-binding, person-based shadow vote for the Shib community (Scope 0), until the community
   chooses otherwise.
 
