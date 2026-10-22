@@ -11,9 +11,10 @@ words; the signatures are listed for reference. All three support ERC-165.
 - **Personhood set:** a set of identity commitments, at most one per person, committed to by a root (`setRoot`).
 - **Scope:** a field element naming the domain in which a person may act once: a community, a proposal, an
   airdrop.
-- **Nullifier:** a deterministic function of the person's identity secret and the scope. It is unique per person and
-  scope, and without the secret it cannot be linked across scopes.
-- **Message:** the value a proof is bound to, for example an action hash or a vote option.
+- **Nullifier:** a deterministic function of the person's identity secret and the scope. It is unique per identity
+  and scope, and without the secret it cannot be linked across scopes. A person with two identities has two
+  nullifiers (see "One identity per person per context" in the draft ERC).
+- **Message:** the value a proof is bound to: the hash of the action, including the context the action belongs to.
 - **Context:** a value chosen by whoever consumes nullifiers: a registration, an epoch, a proposal.
 - **Pseudonym:** a person's nullifier in a scope, used as their identifier there.
 - **Entry scheme of the set:** how the set keeps one entry per person (for Henosis, the registry's document nullifier
