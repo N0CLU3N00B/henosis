@@ -1,30 +1,35 @@
-# Roadmap to Release 1
+# The way to Release 1
 
-Milestones M1 to M6 below are steps on the way to the first release. They are not the architecture modules M1 to M8
-of [ARCHITECTURE.md](ARCHITECTURE.md).
+Release 1 is the core: one verified human, one vote. The steps below are in order; each starts when the one before
+it is done. The target for Release 1 is **early 2027**. That is a target, not a promise: an audit or a ceremony that
+finds something moves it.
 
-| Milestone | Content | Target |
+| Step | Content | State |
 |---|---|---|
-| M1 | Chain-scoped nullifier (v2), all instances re-keyed, blind review | Nov 2026 |
-| M2 | Voting v2: commit-reveal secret ballot, abstention, enforced quorum, rules changeable by vote, pluggable vote format, private join | Nov 2026 |
-| M3 | Reference relayer, key hosting, app end-to-end on testnet | Nov–Dec 2026 |
-| M4 | Freeze, audit package, audits start | Dec 2026 |
-| M5 | Audit remediation, trusted-setup ceremony | Jan–Feb 2027 |
-| M6 | Release 1 on Shibarium mainnet, ERC submitted, code public | Feb–Mar 2027 |
+| Built | Identity with a nullifier bound to chain and registry (v2), voting v2 with a commit-reveal secret ballot and private join, reference relayer, draft ERC | done, tested locally and in CI, not deployed |
+| Hardening | Fixed freeze criteria, independent rebuild of the circuits, audit package | now |
+| Freeze | The circuits are frozen first, the contracts after the ceremony, because the verification keys change the contracts' addresses | next |
+| External audit | The frozen circuits, then the contracts with their verifier integration; remediation after each part | after the freeze |
+| Multi-party ceremony | Trusted setup for the frozen circuits with several independent participants and a public transcript | after the circuit audit |
+| Release 1 | Deployment of Scope 0 on Shibarium mainnet, its home chain; the ERC submitted; the code public | target early 2027 |
 
 ## What Release 1 contains
 
 - **An audited core:** registration, certificate admission, nullifier v2, and voting v2 with child scopes and
-  admission rules. The core is frozen at M4.
+  admission rules. The core is frozen before the audit.
 - **Experimental satellites** next to the core, not frozen. The first one is the **Epoch badge register**:
   - a record per epoch, kept by a contract, of addresses whose holders chose to record their membership;
   - obtained through a zero-knowledge proof against a snapshot;
   - no token standard and nothing transferable;
   - no rule may read it as a threshold.
 
-## After Release 1
+## Deferred until after Release 1
 
-- **Encrypted tally (FHE)** once capacity allows; Release 1 uses a commit-reveal secret ballot.
-- **Karma (M2 of the architecture), lottery (M3), constitution (M6), AI advisory (M7):** design only today; they
-  follow after Release 1.
-- Extension ERCs (proof-verifier interface, vote formats, pseudonym attestations) after the core ERC is submitted.
+These modules stay in the design ([ARCHITECTURE.md](ARCHITECTURE.md)). They were deferred on 13 October 2026, when
+the work concentrated on the core; none of them is dropped.
+
+- **Karma** (module M2), **lottery** (M3), **constitution** (M6) and **AI advisory** (M7): design only today.
+- **Encrypted tally (FHE)** with Zama, through the vote-format slot; Release 1 uses a commit-reveal secret ballot.
+- **STARK-based and EIP-8288 verifiers**, through the governed verifier slots.
+- **Further admission paths** without an electronic document: local vouching and presence events.
+- **Extension ERCs** (proof-verifier interface, vote formats, pseudonym attestations) after the core ERC is submitted.

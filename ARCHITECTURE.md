@@ -3,31 +3,37 @@
 A shortened overview of the architecture specification. It describes the design and the current approach of each
 module.
 
+Release 1 is the core: identity (M1), voting (M4) and the scope registry (M5), with the security and operations work
+of M8 they need. Karma (M2), the lottery (M3), the constitution (M6) and the AI advisory layer (M7) stay in the
+design and are **deferred until after Release 1** (decided 13 October 2026, when the work concentrated on the
+primitive "one verified human, one vote"). Henosis can be deployed on any EVM chain; Shibarium is the home chain of
+Scope 0.
+
 ## 1. Layer model
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  Clients: phone / web / offline node                           │
-│  SDK · wallet (account abstraction) · local proof generation   │
+│  SDK · wallet · relayer · local proof generation               │
 └───────────────┬──────────────────────────────────────────────┘
                 │
 ┌───────────────▼──────────────────────────────────────────────┐
-│  M7  AI advisory layer (off-chain, plural, no keys)            │
+│  M7  AI advisory layer (off-chain, plural, no keys) [deferred] │
 └───────────────┬──────────────────────────────────────────────┘
                 │ hashes of the advisory documents
 ┌───────────────▼──────────────────────────────────────────────┐
-│  M6  Constitution (fundamental rights, amendment rules, brake) │
+│  M6  Constitution (rights, amendments, brake)      [deferred]  │
 ├──────────────────────────────────────────────────────────────┤
 │  M5  Scope registry (local → regional → global)                │
 ├──────────────┬──────────────┬──────────────┬─────────────────┤
 │  M1 Identity │  M2 Karma    │  M3 Lottery  │  M4 Voting      │
-│  (PoP, ZK)   │  (soulbound) │  (beacon)    │  (anonymous)    │
+│  (PoP, ZK)   │  [deferred]  │  [deferred]  │  (anonymous)    │
 └──────────────┴──────────────┴──────────────┴─────────────────┘
                 │
 ┌───────────────▼──────────────────────────────────────────────┐
 │  M8  Security and operations (keys, audits, post-quantum)      │
 ├──────────────────────────────────────────────────────────────┤
-│  Shibarium (Chain 109) · Puppynet testnet (Chain 157)          │
+│  Any EVM chain · home chain of Scope 0: Shibarium (Chain 109)  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -60,12 +66,12 @@ module.
     with a time lock and an objection window.
 - **Chip authentication.** Documents whose chip can sign a challenge can upgrade an identity to a higher assurance
   level, which shows that the chip itself was present and not a copy of its data.
-- **Further admission paths (designed):** local vouching by verified members, and presence events with rotating,
-  randomly selected verifiers for people without an electronic document.
+- **Further admission paths (designed, deferred until after Release 1):** local vouching by verified members, and
+  presence events with rotating, randomly selected verifiers for people without an electronic document.
 - **Recovery.** Rebinding an identity to a new secret by the chip or by presence, with a waiting period and an
   objection, and a successor path for a new document.
 
-### M2 – Karma (soulbound)
+### M2 – Karma (soulbound) — deferred until after Release 1
 
 **Goal:** record mutual aid and community service, non-transferable.
 
@@ -75,7 +81,7 @@ module.
 - Externally only threshold proofs ("at least X karma"), no individual history.
 - Karma converts into lottery tickets or exempts from a duty. It cannot be transferred, sold or delegated.
 
-### M3 – Lottery
+### M3 – Lottery — deferred until after Release 1
 
 **Goal:** allocations that cannot be decided fairly otherwise: time slots, offices between equally qualified people,
 scarce goods.
@@ -105,8 +111,9 @@ scarce goods.
       final sums are decrypted after the window closes.
   - Whoever was shown a voter's vote nullifier can see whether that voter later voted again. With the cleartext tally
     they can also see the new choice.
-- **Voting v2 (Release 1, in work):** a commit-reveal secret ballot, abstention, an enforced quorum, rules changeable
-  by vote, pluggable vote formats and a private join. The FHE tally follows when capacity allows.
+- **Voting v2 (Release 1, built):** a commit-reveal secret ballot, abstention, an enforced quorum, rules changeable
+  by vote, pluggable vote formats and a private join. A second commit inside the commit window overwrites the first.
+  The FHE tally with Zama comes in through the vote-format slot after Release 1.
 - **Target design (later stage):** the MACI principle. Every person can change their voting key without anyone
   noticing, so a bought or coerced vote cannot be proven. The coordinator role is spread over several independent
   operators, and the tally is proven in zero knowledge.
@@ -130,12 +137,14 @@ scarce goods.
     - **anonymity of the vote;**
     - **unilateral exit:** leaving needs no deposit, lock or approval;
     - **decisions only about oneself:** a scope acts only in its own matters, never in another scope.
-  - Creating child scopes and dissolving a scope are decided, not built yet.
-- **Expansion:**
-  - first, all scopes as contracts on Shibarium;
-  - later, large scopes on their own chains with a shared protocol, reading each other's results by state proofs.
+  - Creating child scopes and dissolving a scope are built in the prototype.
+- **Chains:**
+  - scopes are contracts on any EVM chain; Scope 0 lives on Shibarium, its home chain;
+  - every decision has one home chain; other chains read its result by state proofs, never by bridges;
+  - nullifiers are separated per chain and registry, so a person's registrations cannot be linked across chains;
+  - large scopes can later run on chains of their own with the same protocol.
 
-### M6 – Constitution
+### M6 – Constitution — deferred until after Release 1
 
 - **Fundamental rights,** immutable in the protocol: participation, exit, privacy, equality of the vote.
 - **Amendments** to other rules need a supermajority across several scopes and a time lock.
@@ -146,7 +155,7 @@ scarce goods.
 - **No admin keys.** Until M6 exists, an interim objector can only object (veto during a time lock, a time-limited
   pause). The role is meant to pass to M6, acting through signatures collected off-chain.
 
-### M7 – AI advisory layer
+### M7 – AI advisory layer — deferred until after Release 1
 
 - At least three independent models from different operators, at least one with open weights.
 - Each side of a decision gets its own argument (the "voting booklet" principle); facts with sources are kept
@@ -159,18 +168,23 @@ scarce goods.
 - Threshold signatures or MPC for every operator role.
 - External audits and formal verification of all contracts before mainnet.
 - Upgrades only through the M6 procedure with a time lock.
-- Crypto-agility: signature and proof systems are swappable, so post-quantum schemes can be adopted when standards
-  and audited implementations exist.
-- Gas abstraction: users need no BONE; transactions are submitted by a relayer (with a direct-send fallback), funded
-  from a community pool. Account abstraction is revisited once an ERC-4337 EntryPoint exists on Shibarium.
+- Crypto-agility: signature and proof systems are swappable through governed verifier slots (time lock and
+  objection), so STARK-based verifiers, verifiers built on EIP-8288 and post-quantum schemes can be adopted when
+  standards and audited implementations exist. The Release-1 core stays on Groth16 over BN254.
+- Gas abstraction: users need no gas token (BONE on Shibarium); transactions are submitted by a relayer (with a
+  direct-send fallback), funded from a community pool. A reference relayer is built. Account abstraction is
+  revisited once an ERC-4337 EntryPoint exists on Shibarium.
 - Offline-first clients: proofs are generated on the device, submitted through a relayer or a local node.
 
 ## 4. Example: a vote in a local scope
 
+The example shows the full design. In Release 1, step 2 (M7) and the emergency brake of step 6 (M6) are not yet
+there.
+
 1. A member creates a motion; its hash goes on chain.
 2. M7 prepares arguments for and against from several models; hashes on chain, content on distributed storage.
-3. Members vote with a membership proof (M1) and their encrypted or anonymous vote (M4).
-4. Votes can be changed until the deadline.
+3. Members vote with a membership proof (M1) and a commitment to their vote (M4).
+4. A vote can be changed until the commit window closes; then the votes are revealed.
 5. The tally is computed and published with its proof.
 6. The result takes effect after a time lock, unless the emergency brake (M6) is invoked.
 
